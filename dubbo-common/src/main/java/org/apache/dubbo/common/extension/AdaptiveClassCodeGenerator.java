@@ -55,10 +55,10 @@ public class AdaptiveClassCodeGenerator {
     private static final String CODE_EXT_NAME_ASSIGNMENT = "String extName = %s;\n";
 
     private static final String CODE_EXT_NAME_NULL_CHECK = "if(extName == null) "
-                    + "throw new IllegalStateException(\"Failed to get extension (%s) name from url (\" + url.toString() + \") use keys(%s)\");\n";
+            + "throw new IllegalStateException(\"Failed to get extension (%s) name from url (\" + url.toString() + \") use keys(%s)\");\n";
 
     private static final String CODE_INVOCATION_ARGUMENT_NULL_CHECK = "if (arg%d == null) throw new IllegalArgumentException(\"invocation == null\"); "
-                    + "String methodName = arg%d.getMethodName();\n";
+            + "String methodName = arg%d.getMethodName();\n";
 
 
     private static final String CODE_EXTENSION_ASSIGNMENT = "%s extension = (%<s)%s.getExtensionLoader(%s.class).getExtension(extName);\n";
@@ -86,15 +86,16 @@ public class AdaptiveClassCodeGenerator {
      */
     public String generate() {
         // no need to generate adaptive class since there's no adaptive method found.
-        if (!hasAdaptiveMethod()) {
+        if (!hasAdaptiveMethod()) { // 类中须有Adaptive注解在方法上
             throw new IllegalStateException("No adaptive method exist on extension " + type.getName() + ", refuse to create the adaptive class!");
         }
 
         StringBuilder code = new StringBuilder();
-        code.append(generatePackageInfo());
-        code.append(generateImports());
-        code.append(generateClassDeclaration());
+        code.append(generatePackageInfo()); // package
+        code.append(generateImports()); // imports
+        code.append(generateClassDeclaration());    // class declaration
 
+        // 通过反射获得所有方法
         Method[] methods = type.getMethods();
         for (Method method : methods) {
             code.append(generateMethod(method));
@@ -168,8 +169,8 @@ public class AdaptiveClassCodeGenerator {
     private String generateMethodArguments(Method method) {
         Class<?>[] pts = method.getParameterTypes();
         return IntStream.range(0, pts.length)
-                        .mapToObj(i -> String.format(CODE_METHOD_ARGUMENT, pts[i].getCanonicalName(), i))
-                        .collect(Collectors.joining(", "));
+                .mapToObj(i -> String.format(CODE_METHOD_ARGUMENT, pts[i].getCanonicalName(), i))
+                .collect(Collectors.joining(", "));
     }
 
     /**
@@ -198,17 +199,30 @@ public class AdaptiveClassCodeGenerator {
     private String generateMethodContent(Method method) {
         Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class);
         StringBuilder code = new StringBuilder(512);
-        if (adaptiveAnnotation == null) {
-            return generateUnsupported(method);
-        } else {
+        if (adaptiveAnnotation == null) {   // 未被Adaptive注解修饰的方法
+            return generateUnsupported(method); // throws UnsupportedOperationException
+        } else {    // 被Adaptvie注解修饰的方法
             int urlTypeIndex = getUrlTypeIndex(method);
 
             // found parameter in URL type
             if (urlTypeIndex != -1) {
                 // Null Point check
+               /*
+               if (arg1 == null)
+                    throw new IllegalArgumentException("url == null");
+                com.alibaba.dubbo.common.URL url = arg1;
+                */
                 code.append(generateUrlNullCheck(urlTypeIndex));
-            } else {
+            } else {    // 未有URL参数
                 // did not find parameter in URL type
+                /*
+                if (arg0 == null)
+
+                    throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument == null");
+                if (arg0.getUrl() == null)
+                    throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument getUrl() == null");
+                com.alibaba.dubbo.common.URL url = arg0.getUrl();
+                */
                 code.append(generateUrlAssignmentIndirectly(method));
             }
 
@@ -218,13 +232,15 @@ public class AdaptiveClassCodeGenerator {
 
             code.append(generateInvocationArgumentNullCheck(method));
 
+            // extension name
             code.append(generateExtNameAssignment(value, hasInvocation));
             // check extName == null?
             code.append(generateExtNameNullCheck(value));
 
+            // get extension instance,through ExtensionLoader,所以需要配置dubbo的SPI的方式(AdaptiveXXX)
             code.append(generateExtensionAssignment());
 
-            // return statement
+            // return statement 调用实际方法的地方
             code.append(generateReturnAndInvocation(method));
         }
 
@@ -242,9 +258,16 @@ public class AdaptiveClassCodeGenerator {
      * generate extName assigment code
      */
     private String generateExtNameAssignment(String[] value, boolean hasInvocation) {
+        /*String extName = url.getParameter(value[0], url.getParameter(value[1], ${defaultExtName}));
+        if (extName == null) {
+            throw new IllegalStateException(
+                    "Fail to get extension(com.alibaba.dubbo.remoting.Transporter) name from url(" + url.toString()
+                            + ") use keys([client, transporter])");
+        }*/
+
         // TODO: refactor it
         String getNameCode = null;
-        for (int i = value.length - 1; i >= 0; --i) {
+        for (int i = value.length - 1; i >= 0; --i) {   // 由后向前遍历
             if (i == value.length - 1) {
                 if (null != defaultExtName) {
                     if (!"protocol".equals(value[i])) {
@@ -317,8 +340,8 @@ public class AdaptiveClassCodeGenerator {
     private String generateInvocationArgumentNullCheck(Method method) {
         Class<?>[] pts = method.getParameterTypes();
         return IntStream.range(0, pts.length).filter(i -> CLASSNAME_INVOCATION.equals(pts[i].getName()))
-                        .mapToObj(i -> String.format(CODE_INVOCATION_ARGUMENT_NULL_CHECK, i, i))
-                        .findFirst().orElse("");
+                .mapToObj(i -> String.format(CODE_INVOCATION_ARGUMENT_NULL_CHECK, i, i))
+                .findFirst().orElse("");
     }
 
     /**
@@ -360,7 +383,7 @@ public class AdaptiveClassCodeGenerator {
 
         // getter method not found, throw
         throw new IllegalStateException("Failed to create adaptive class for interface " + type.getName()
-                        + ": not found url parameter or url attribute in parameters of method " + method.getName());
+                + ": not found url parameter or url attribute in parameters of method " + method.getName());
 
     }
 

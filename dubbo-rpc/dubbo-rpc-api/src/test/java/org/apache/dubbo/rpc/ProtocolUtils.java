@@ -43,4 +43,8 @@ public class ProtocolUtils {
         return protocol.export(proxy.getInvoker(instance, type, url));
     }
 
+    public static void main(String[] args) {
+        System.out.println(protocol.getClass().getCanonicalName());
+    }
+
 }
