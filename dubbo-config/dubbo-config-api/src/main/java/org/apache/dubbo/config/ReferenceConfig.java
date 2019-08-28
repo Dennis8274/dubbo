@@ -216,11 +216,11 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         if (StringUtils.isEmpty(interfaceName)) {
             throw new IllegalStateException("<dubbo:reference interface=\"\" /> interface not allow null!");
         }
-        completeCompoundConfigs();
-        startConfigCenter();
+        completeCompoundConfigs();  // registry monitor application module
+        startConfigCenter();    // dynamic config
         // get consumer's global configuration
         checkDefault();
-        this.refresh();
+        this.refresh(); //
         if (getGeneric() == null && getConsumer() != null) {
             setGeneric(getConsumer().getGeneric());
         }
@@ -241,7 +241,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     }
 
     public synchronized T get() {
-        checkAndUpdateSubConfigs();
+        checkAndUpdateSubConfigs(); // config
 
         if (destroyed) {
             throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");

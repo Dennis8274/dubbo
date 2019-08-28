@@ -576,7 +576,7 @@ public class DubboProtocol extends AbstractProtocol {
         String str = url.getParameter(CLIENT_KEY, url.getParameter(SERVER_KEY, DEFAULT_REMOTING_CLIENT));
 
         url = url.addParameter(CODEC_KEY, DubboCodec.NAME);
-        // enable heartbeat by default
+        // enable heartbeat by default  心跳interval 1min
         url = url.addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT));
 
         // BIO is not allowed since it has severe performance issue.

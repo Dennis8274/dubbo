@@ -130,7 +130,7 @@ public class RegistryProtocol implements Protocol {
     private final ConcurrentMap<String, ExporterChangeableWrapper<?>> bounds = new ConcurrentHashMap<>();
     private Cluster cluster;
     private Protocol protocol;  // dubbo的spi有注入的机制,根据providerUrl里的getProtocol来的，默认为dubbo
-    private RegistryFactory registryFactory;
+    private RegistryFactory registryFactory;    // 跟上边的protocol一样,dubbo的spi
     private ProxyFactory proxyFactory;
 
     public RegistryProtocol() {
@@ -406,9 +406,11 @@ public class RegistryProtocol implements Protocol {
         URL subscribeUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
         if (!ANY_VALUE.equals(url.getServiceInterface()) && url.getParameter(REGISTER_KEY, true)) {
             directory.setRegisteredConsumerUrl(getRegisteredConsumerUrl(subscribeUrl, url));
+            // 向注册中心注册consumer,并且在注册中心consumers目录下生成新节点
             registry.register(directory.getRegisteredConsumerUrl());
         }
         directory.buildRouterChain(subscribeUrl);
+        // 订阅providers configurators routers节点数据
         directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
 
