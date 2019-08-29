@@ -63,6 +63,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         }
     }
 
+    // <<serviceKey+methodName>,<invokerUrl,weight>>
     private ConcurrentMap<String, ConcurrentMap<String, WeightedRoundRobin>> methodWeightMap = new ConcurrentHashMap<String, ConcurrentMap<String, WeightedRoundRobin>>();
     private AtomicBoolean updateLock = new AtomicBoolean();
     
@@ -86,7 +87,9 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
     
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
+        // serviceKey + methodName
         String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
+        // 每一个方法一个map
         ConcurrentMap<String, WeightedRoundRobin> map = methodWeightMap.get(key);
         if (map == null) {
             methodWeightMap.putIfAbsent(key, new ConcurrentHashMap<String, WeightedRoundRobin>());
@@ -99,28 +102,30 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         WeightedRoundRobin selectedWRR = null;
         for (Invoker<T> invoker : invokers) {
             String identifyString = invoker.getUrl().toIdentityString();
-            WeightedRoundRobin weightedRoundRobin = map.get(identifyString);
+            WeightedRoundRobin weightedRoundRobin = map.get(identifyString);    // 每个invoker对应一个WeightedRoundRobin
             int weight = getWeight(invoker, invocation);
 
-            if (weightedRoundRobin == null) {
+            if (weightedRoundRobin == null) {   // 新增invoker
                 weightedRoundRobin = new WeightedRoundRobin();
                 weightedRoundRobin.setWeight(weight);
                 map.putIfAbsent(identifyString, weightedRoundRobin);
             }
-            if (weight != weightedRoundRobin.getWeight()) {
+            if (weight != weightedRoundRobin.getWeight()) { // weight 改变
                 //weight changed
                 weightedRoundRobin.setWeight(weight);
             }
             long cur = weightedRoundRobin.increaseCurrent();
             weightedRoundRobin.setLastUpdate(now);
-            if (cur > maxCurrent) {
+            if (cur > maxCurrent) { // 选取权重最大的
                 maxCurrent = cur;
                 selectedInvoker = invoker;
                 selectedWRR = weightedRoundRobin;
             }
             totalWeight += weight;
         }
-        if (!updateLock.get() && invokers.size() != map.size()) {
+        if (!updateLock.get()
+                //  这个方法的invokers数量变动
+                && invokers.size() != map.size()) {
             if (updateLock.compareAndSet(false, true)) {
                 try {
                     // copy -> modify -> update reference
@@ -129,6 +134,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
                     Iterator<Entry<String, WeightedRoundRobin>> it = newMap.entrySet().iterator();
                     while (it.hasNext()) {
                         Entry<String, WeightedRoundRobin> item = it.next();
+                        // 超过1 min没有 invoker不在列表中
                         if (now - item.getValue().getLastUpdate() > RECYCLE_PERIOD) {
                             it.remove();
                         }
@@ -140,7 +146,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
             }
         }
         if (selectedInvoker != null) {
-            selectedWRR.sel(totalWeight);
+            selectedWRR.sel(totalWeight);   // 被选取了，需要把weight重置
             return selectedInvoker;
         }
         // should not happen here

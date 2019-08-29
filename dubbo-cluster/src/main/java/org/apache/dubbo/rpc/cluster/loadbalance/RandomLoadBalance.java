@@ -78,7 +78,7 @@ public class RandomLoadBalance extends AbstractLoadBalance {
             }
         }
         // If all invokers have the same weight value or totalWeight=0, return evenly.
-        return invokers.get(ThreadLocalRandom.current().nextInt(length));
+        return invokers.get(ThreadLocalRandom.current().nextInt(length));   // 所有invoker的权重相同，就随机选一个了。都是儿子，还分什么太子
     }
 
 }
