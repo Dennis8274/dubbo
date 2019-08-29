@@ -61,6 +61,12 @@ public class LoadBalanceBaseTest {
 
     RpcInvocation weightTestInvocation;
 
+    @Test
+    public void test() {
+        ExtensionLoader.getExtensionLoader(LoadBalance.class).getAdaptiveExtension();
+    }
+
+
     /**
      * @throws java.lang.Exception
      */
