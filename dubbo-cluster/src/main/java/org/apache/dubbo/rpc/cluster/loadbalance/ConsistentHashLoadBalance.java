@@ -57,7 +57,9 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
         String key = invokers.get(0).getUrl().getServiceKey() + "." + methodName;
         int identityHashCode = System.identityHashCode(invokers);
         ConsistentHashSelector<T> selector = (ConsistentHashSelector<T>) selectors.get(key);
-        if (selector == null || selector.identityHashCode != identityHashCode) {
+        if (selector == null
+                // invokers 列表改变了
+                || selector.identityHashCode != identityHashCode) {
             selectors.put(key, new ConsistentHashSelector<T>(invokers, methodName, identityHashCode));
             selector = (ConsistentHashSelector<T>) selectors.get(key);
         }
@@ -86,11 +88,11 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             }
             for (Invoker<T> invoker : invokers) {
                 String address = invoker.getUrl().getAddress();
-                for (int i = 0; i < replicaNumber / 4; i++) {
+                for (int i = 0; i < replicaNumber / 4; i++) {   // 分段，段长为4
                     byte[] digest = md5(address + i);
                     for (int h = 0; h < 4; h++) {
-                        long m = hash(digest, h);
-                        virtualInvokers.put(m, invoker);
+                        long m = hash(digest, h);   // 分成四段,平均
+                        virtualInvokers.put(m, invoker);    // 16个虚拟节点
                     }
                 }
             }
@@ -141,6 +143,11 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             return md5.digest();
         }
 
+    }
+
+    public static void main(String[] args) {
+        System.out.println(0xF);
+        System.out.println(Integer.toBinaryString(0xF));
     }
 
 }
