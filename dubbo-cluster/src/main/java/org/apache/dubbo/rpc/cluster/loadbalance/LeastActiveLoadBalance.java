@@ -80,24 +80,24 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
                 // Each invoke has the same weight (only one invoker here)
                 sameWeight = true;
                 // If current invoker's active value equals with leaseActive, then accumulating.
-            } else if (active == leastActive) {
+            } else if (active == leastActive) { // 相同活跃度
                 // Record the index of the least active invoker in leastIndexes order
-                leastIndexes[leastCount++] = i;
+                leastIndexes[leastCount++] = i; // 相同活跃度的invoker的索引数组
                 // Accumulate the total weight of the least active invoker
-                totalWeight += afterWarmup;
+                totalWeight += afterWarmup; // 相同活跃度的所有invoker的总权重
                 // If every invoker has the same weight?
                 if (sameWeight && i > 0
-                        && afterWarmup != firstWeight) {
+                        && afterWarmup != firstWeight) {    // 有权重不同的invoker
                     sameWeight = false;
                 }
             }
         }
         // Choose an invoker from all the least active invokers
-        if (leastCount == 1) {
+        if (leastCount == 1) {  // 只有一个,就不争了
             // If we got exactly one invoker having the least active value, return this invoker directly.
             return invokers.get(leastIndexes[0]);
         }
-        if (!sameWeight && totalWeight > 0) {
+        if (!sameWeight && totalWeight > 0) {   // 活跃度相同的invoker，权重不同
             // If (not every invoker has the same weight & at least one invoker's weight>0), select randomly based on 
             // totalWeight.
             int offsetWeight = ThreadLocalRandom.current().nextInt(totalWeight);
