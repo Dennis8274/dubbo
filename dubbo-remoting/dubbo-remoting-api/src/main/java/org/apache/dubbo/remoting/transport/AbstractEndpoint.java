@@ -32,6 +32,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * AbstractEndpoint
+ *
+ * 超时 连接超时 加密
+ *
  */
 public abstract class AbstractEndpoint extends AbstractPeer implements Resetable {
 

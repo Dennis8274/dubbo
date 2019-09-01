@@ -88,6 +88,19 @@ public class RegistryDirectoryTest {
 
     private Registry registry = Mockito.mock(Registry.class);
 
+    public static void main(String[] args) {
+        ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);
+        Protocol protocol = loader.getAdaptiveExtension();
+
+        Invoker<URL> invoker = doRefer(URL.class, URL.valueOf("dubbo://10.134.108.1:20880/org.apache.dubbo.registry.dubbo.RegistryDirectoryTest$DemoService?application=mockApplication&check=false&group=group1&methods=getXXX&mock=false&remote.application=mockApplication"), protocol);
+
+        System.out.println(invoker.getClass());
+    }
+
+    private static <T> Invoker<T> doRefer(Class<T> clazz, URL url, Protocol protocol) {
+        return protocol.refer(clazz, url);
+    }
+
     @BeforeEach
     public void setUp() {
 

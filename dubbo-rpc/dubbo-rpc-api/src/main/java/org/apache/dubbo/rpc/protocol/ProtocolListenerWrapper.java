@@ -74,6 +74,13 @@ public class ProtocolListenerWrapper implements Protocol {
                                 .getActivateExtension(url, INVOKER_LISTENER_KEY)));
     }
 
+    public static void main(String[] args) {
+        URL url = URL.valueOf("dubbo://127.0.0.1:9091/org.apache.dubbo.registry.dubbo.RegistryDirectoryTest$DemoService?application=mockName&check=false&interface=org.apache.dubbo.registry.dubbo.RegistryDirectoryTest$DemoService&lazy=true&remote.application=mockName&side=consumer");
+
+        ExtensionLoader.getExtensionLoader(InvokerListener.class)
+                .getActivateExtension(url, INVOKER_LISTENER_KEY);
+    }
+
     @Override
     public void destroy() {
         protocol.destroy();

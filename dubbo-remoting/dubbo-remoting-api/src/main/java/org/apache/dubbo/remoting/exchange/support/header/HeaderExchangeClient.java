@@ -41,6 +41,9 @@ import static org.apache.dubbo.remoting.Constants.TICKS_PER_WHEEL;
 
 /**
  * DefaultMessageClient
+ *
+ * 处理重连 以及保持心跳
+ *
  */
 public class HeaderExchangeClient implements ExchangeClient {
 

@@ -531,9 +531,11 @@ public class ExtensionLoader<T> {
                 instance = (T) EXTENSION_INSTANCES.get(clazz);
             }
             injectExtension(instance);
+            // 所有wrapper要参与 !!!
             Set<Class<?>> wrapperClasses = cachedWrapperClasses;
             if (CollectionUtils.isNotEmpty(wrapperClasses)) {
                 for (Class<?> wrapperClass : wrapperClasses) {
+                    // 一层套一层 wrapper 套一个instance
                     instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                 }
             }
@@ -561,6 +563,9 @@ public class ExtensionLoader<T> {
                         }
                         try {
                             String property = getSetterProperty(method);
+                            if (property.equals("protocol")){
+                                System.out.println("test");
+                            }
                             Object object = objectFactory.getExtension(pt, property);
                             if (object != null) {
                                 method.invoke(instance, object);

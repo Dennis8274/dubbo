@@ -39,6 +39,9 @@ import java.util.concurrent.CompletionStage;
 
 /**
  * ExchangeReceiver
+ *
+ * request response event等分发
+ *
  */
 public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
