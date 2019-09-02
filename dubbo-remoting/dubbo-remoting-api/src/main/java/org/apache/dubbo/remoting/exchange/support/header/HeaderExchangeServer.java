@@ -48,6 +48,9 @@ import static org.apache.dubbo.remoting.utils.UrlUtils.getIdleTimeout;
 
 /**
  * ExchangeServerImpl
+ *
+ * idle channel的检测
+ *
  */
 public class HeaderExchangeServer implements ExchangeServer {
 
