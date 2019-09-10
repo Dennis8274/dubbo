@@ -88,7 +88,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             }
             for (Invoker<T> invoker : invokers) {
                 String address = invoker.getUrl().getAddress();
-                for (int i = 0; i < replicaNumber / 4; i++) {   // 分段，段长为4
+                for (int i = 0; i < replicaNumber / 4; i++) {   // 总共四大块
                     byte[] digest = md5(address + i);
                     for (int h = 0; h < 4; h++) {
                         long m = hash(digest, h);   // 分成四段,平均
